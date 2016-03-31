@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>test tasks</title>
+</head>
+<body>
+    <style>
+        table{
+            background: black;
+            margin: 30px;
+        }
+        th,td{
+            text-align: center;
+            color:white;
+            border:1px dotted red;
+            width: 50px;
+        }
+        table.t2{
+           background: white;
+           border: 1px solid black;
+        }
+        .t2{
+            text-align: center;
+            border:1px dotted green;
+            color: black;
+        }
+        .output_result{
+            width: 700px;
+            height: 500px;
+            border:1px red solid;
+            overflow: scroll;
+        }
+        button{
+            margin: 5px;
+            background: gray;
+            color: white;
+            border-radius: 3px;
+            border:0;
+            cursor: pointer;
+        }
+        .iframes{
+            padding: 10px;
+        }
+    </style>
+    <!-- <!- js:hello world -->
+    <table class="main_table">
+        <tbody>
+        <tr>
+            <th>1</th>
+            <th>2</th>
+            <th>3</th>
+        </tr>
+        <tr>
+            <td>Bob</td>
+            <td>18.3</td>
+            <td>4</td>
+        </tr>
+        <tr>
+            <td>Ann</td>
+            <td>16</td>
+            <td>-2</td>
+        </tr>
+        <tr>
+            <td>Steve</td>
+            <td>-22.5</td>
+            <td>7.7</td>
+        </tr>
+        <tr>
+            <td>Petya</td>
+            <td>-2.5</td>
+            <td>17.7</td>
+        </tr>
+        </tbody>
+        <!-- javascript -->
+    </table>
+        <!-- <!- js:sky -->
+    <div class="buttons">
+        
+    </div>
+    <div class="output_result">
+        
+    </div>
+    <div class="iframes">
+        
+    </div>
+    <script>
+    var task=(function (window) {
+
+    var main={};
+    
+    main.util={
+            /*метод для добавления обработчики при собитий(click)*/
+            event:function(elem,event,callback){
+                if(elem.addEventListener){
+                    elem.addEventListener(event, callback,false);
+                    return elem;
+                }else{
+                    elem.attachEvent('on'+event,callback);
+                    return elem;
+                }
+            },
+            /*кросбраузерный document ready*/
+            ready:function (callback) {
+                if (document.addEventListener) {
+                document.addEventListener("DOMContentLoaded", callback, false);
+            // If IE event model is used
+                }else if (document.attachEvent) {
+                document.attachEvent("onreadystatechange", function() {
+                if (document.readyState == "interactive" ) {
+                    callback();
+                    }
+                });
+            // A fallback to window.onload
+                } else {
+                    window.onload = function () {
+                    callback();
+                    };
+                }
+            }
+        };
+
+    main.tools={
+            /*метод для проверки на наличие класса*/
+            hasClass:function(elem,elClassName) {
+                //if >ie9 use classList
+                if(typeof elClassName !=="string") throw Errow('wrong type of argument');
+                if (elem.className==elClassName){
+                    return true;
+                }else{
+                    var regExp=new RegExp('(\\s|^)' + elClassName + '(\\s|$)');
+                    return regExp.test(elem.className);
+                }
+            },
+            /*метод бля создания слона исходной таблици*/ 
+            cloneTable: function () {
+            var clone,
+                tables=document.getElementsByTagName('table');
+                if(tables.length){
+                    for(var t in tables){
+                      //  console.log(this);
+                        var flag=main.tools.hasClass(tables[t],"main_table");
+                        
+                        if(flag) {
+                            clone=tables[t].cloneNode(true);
+                           
+                            for(var r=1;r<clone.rows.length;r=r+1){
+                                var row=clone.rows[r];
+                                if(row.style.display==="none"){
+                                    clone.firstElementChild.removeChild(row);
+                                }
+                            }
+
+                            return clone;
+                        }
+                    }
+                }else{
+                    throw new Error("Tables not found!");
+                }
+
+            },
+            /*метод бля создания кнопки задачи*/ 
+            createButton: function(name,callback){
+                var btn=document.createElement('button');
+                btn.innerHTML=name;
+                main.util.event(btn,'click',callback);
+                var wrap=document.getElementsByClassName('buttons')[0];
+                wrap.appendChild(btn);
+                return btn;
+
+            }
+            
+        };
+    main.cookie={
+        // возвращает cookie с именем name, если есть, если нет, то undefined
+        getCookie:function (name) {
+          var matches = document.cookie.match(new RegExp(
+            "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+          ));
+          return matches ? decodeURIComponent(matches[1]) : undefined;
+        },
+
+        // устанавливает cookie c именем name и значением value
+        // options - объект с свойствами cookie (expires, path, domain, secure)
+        setCookie:function (name, value, options) {
+          options = options || {};
+
+          var expires = options.expires;
+
+          if (typeof expires == "number" && expires) {
+            var d = new Date();
+            d.setTime(d.getTime() + expires * 1000);
+            expires = options.expires = d;
+          }
+          if (expires && expires.toUTCString) {
+            options.expires = expires.toUTCString();
+          }
+
+          value = encodeURIComponent(value);
+
+          var updatedCookie = name + "=" + value;
+
+          for (var propName in options) {
+            updatedCookie += "; " + propName;
+            var propValue = options[propName];
+            if (propValue !== true) {
+              updatedCookie += "=" + propValue;
+            }
+          }
+
+          document.cookie = updatedCookie;
+          // в протокол file:/ по дефолту выключены,поэтому вернем значение  
+          return value;
+        },
+
+        // удаляет cookie с именем name
+        deleteCookie:function (name) {
+          main.cookie.setCookie(name, "", {expires: -1});
+        }
+    };
+
+    main.XmlHttp={
+        createXMLHttpRequest:function(){
+            var xmlHttp = null;
+            //ie10,moz,chrome
+            if(typeof XMLHttpRequest != "undefined"){
+                xmlHttp = new XMLHttpRequest();
+            //ie8-9    
+            }else if(typeof XDomainRequest != "undefined"){
+                 xmlHttp = new XDomainRequest();
+            //ie7-6
+            }else if(typeof window.ActiveXObject != "undefined"){
+                try {
+                    xmlHttp = new ActiveXObject("Msxml2.XMLHTTP.4.0");
+                }
+                catch(e){
+                    try {
+                        xmlHttp = new ActiveXObject("MSXML2.XMLHTTP");
+                    }
+                    catch(e){
+                        try {
+                            xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
+                        }
+                        catch(e){
+                            xmlHttp = null;
+                        }
+                    }
+                }
+            }
+            return xmlHttp;
+        },
+        get:function (xhr,url) {
+            //ie10,moz,chrome
+            if(window.XMLHttpRequest){
+                console.log(true);
+                xhr.open('GET',url,true);
+                xhr.send();
+                xhr.onreadystatechange = function() { 
+                    if (xhr.readyState != 4) return;
+
+                    if (xhr.status != 200) {
+                        console.log(xhr.status + ': ' + xhr.statusText);
+                    } else {
+                        console.log(xhr.responseText);
+                    }
+                };
+            }else{
+                xhr.open('GET',url);
+                xhr.onerror = function(){
+                    console.log('Something went wrong...');
+                };
+                xhr.onload=function(){
+                    console.log(xhr.responseText);
+                };
+                 xhr.send();
+
+            }
+        }
+    };
+
+    main.operation={
+        /*задание 1
+        Создать кнопку, по нажатию на которую, появится копия исходной таблицы, но с порядком полей: 1, 3, 2. Применить для новой таблицы стили t2
+        */
+           '1': function(){
+                that=this;
+                main.tools.createButton('task1',function () {
+                    
+                    var newTable=main.tools.cloneTable(),
+                        r;
+                        newTable.className='t2';
+                        for(r=0;r<newTable.rows.length;r=r+1){
+                            var row=newTable.rows[r];
+                            /*померяем местами поля*/
+                            row.insertBefore(row.children[2], row.children[1]);
+                            var c;
+                            for(c=0;c<row.cells.length;c=c+1){
+                                /*Применить для новой таблицы стили t2*/
+                                row.cells[c].className='t2';
+                            }
+                        }
+                var res=document.getElementsByClassName('output_result')[0];
+                res.appendChild(newTable);
+                });
+            },
+            /*2.Создать кнопку, по нажатию на которую, появится копия исходной таблицы, но с дополнительным полем  4, 
+                в котором будет сумма полей 2 и 3. Применить для новой таблицы стили t2*/
+            '2': function(){
+                main.tools.createButton('task2',function () {
+                    
+                    var newTable=main.tools.cloneTable(),
+                        r;
+                        newTable.className='t2';
+
+                        for(r = 0;r < newTable.rows.length;r = r + 1){
+                            var row=newTable.rows[r];
+                            if(r == 0){
+                                var th=document.createElement('th');
+                                th.innerHTML=row.cells.length+1;
+                                row.appendChild(th);
+                            }else{
+                                var td=document.createElement('td');
+                                var secondCell=parseFloat(row.cells[1].innerHTML);
+                                var thirdCell=parseFloat(row.cells[2].innerHTML);
+                                td.innerHTML=String(secondCell+thirdCell);
+                                row.appendChild(td);
+                            }
+                            var c;
+                            for(c=0;c<row.cells.length;c=c+1){
+                                row.cells[c].className='t2';
+                            }
+                        }
+                var res=document.getElementsByClassName('output_result')[0];
+                res.appendChild(newTable);
+                });
+            },
+            /*Создать кнопку, по нажатию на которую, сохранится в cookie ключ bbb со значением, равным 43
+            при последующем обновлении html  в исходной таблице и в таблицах из пунктов 1, 2, 5 и 6 все числа должны быть уменьшены на это значение
+            и все операции должны производиться уже с этим новым уменьшенным числом*/
+            '3':function () {
+                var cookie=main.cookie.getCookie('bbb');
+                if(cookie===undefined){
+                    cookie=main.cookie.setCookie("bbb",43,{expires:500});
+                }
+                main.tools.createButton('Task3', function () {
+                
+                var table=document.getElementsByTagName('table');
+                /*console.log(table);*/
+                    if(table){
+                        for(var i=0;i<table.length;i++){
+                            
+                            if(!main.tools.hasClass(table[i],'t2')){
+                                continue;
+                            }
+                            for(var r=1;r<table[i].rows.length;r=r+1){
+                                for(var c=1;c<table[i].rows[r].cells.length;c=c+1){
+                                    
+                                    table[i].rows[r].cells[c].innerHTML-=cookie;
+                                }
+                            }
+
+                        } 
+                    }
+                });
+            },
+            /*Создать кнопку, по нажатию на которую, сформируется XMLHttp-запрос на сайт «http://domain.com», 
+            в котором параметрами будут переданы поле 1 и сумма полей 2 и 3 исходной таблицы, при условии что сумма больше 5.
+            Перед отправкой вывести alert с этими параметрами. Имя параметра формируется так: p1 – поле 1, ps – сумма полей 2 и 3.
+            Если под условие подходит несколько строк, то объединить это в один запрос*/
+            '4':function () {
+                var xhr=main.XmlHttp.createXMLHttpRequest();
+                that=this;
+                main.tools.createButton('Task4', function () {
+               
+                
+                    var tables=document.getElementsByClassName('main_table'),
+                        urlPram=[];
+                       
+                    /*если список исходных таблиц не пуст*/
+                    if(tables.length){
+                        for(var r=1;r<tables[0].rows.length;r=r+1){ 
+                            var rows=tables[0].rows;
+                            var name=rows[r].cells[0];
+                            
+                            var colls=tables[0].rows[r].cells;
+                            var cells2=parseFloat(colls[1].innerHTML);
+                            var cells3=parseFloat(colls[2].innerHTML);
+                            var ps=cells2+cells3;
+                            
+                            if(ps>5){
+                                urlPram.push("[p1]="+name.innerHTML);
+                                urlPram.push("[ps]="+ps);
+                            }
+                        }
+                    }
+                /*если массив параметров не пуст*/
+                    if(urlPram.length){
+                    var param=urlPram.join('&');
+                    var url="http://domain.com?"+param;
+                    alert(url);
+                    that.XmlHttp.get(xhr,url);
+                    }
+                });
+            },
+            /*Создать кнопку, по нажатию на которую, появится iframe, внутри которого будет загружен site.html(без каких-либо параметров) с исходной таблицей,  
+            у которой будут невидимыми строки с отрицательными числами в поле 3. В загруженном ифрейме копии исходных таблиц из пунктов 1, 2 и 4
+            не должны содержать невидимую строку исходной таблицы*/
+            '5':function () {
+                that=this;
+                main.tools.createButton('Task5', function () {
+               
+                    var url=window.location.href;
+                
+                    var iframe=document.createElement('iframe');
+                    iframe.style.width=600+"px";
+                    iframe.style.height=600+"px";
+                    iframe.src=url;
+                    var out=document.getElementsByClassName('iframes')[0];
+                    out.appendChild(iframe);
+                    that.util.event(iframe,'load',function () {
+                          var fdoc=(iframe.contentDocument) ? iframe.contentDocument : iframe.contentWindow.document,
+                              tables=fdoc.getElementsByClassName('main_table'); 
+
+                          if(tables.length){
+                            for(var r=1;r<tables[0].rows.length;r=r+1){
+                                var row=tables[0].rows[r];
+                                var cell3=parseFloat(row.cells[2].innerHTML);
+                                
+                                if(cell3<0){
+                                    row.style.display='none';
+                                }
+                            }
+                        }
+                    });
+                });
+            },
+            /*Создать кнопку, по нажатию на которую, появится iframe, внутри которого будет загружен site.html(без каких-либо параметров) с исходной таблицей,
+            у которой будут невидимыми строки, у которых поле 1 равно «Petya».Это значение должно задаваться отдельной переменной.
+            В загруженном ифрейме копии исходных таблиц из пунктов 1, 2 и 4 не должны содержать невидимую строку исходной таблицы*/
+            '6':function () {
+                that=this;
+                main.tools.createButton('Task6', function () {
+                    var url=window.location.href,
+                    iframe=document.createElement('iframe'),
+                    word="Petya";
+
+                    iframe.style.width=600+"px";
+                    iframe.style.height=600+"px";
+                    iframe.src=url;
+                    var out=document.getElementsByClassName('iframes')[0];
+                    out.appendChild(iframe);
+                    that.util.event(iframe,'load',function () {
+                          var fdoc=(iframe.contentDocument) ? iframe.contentDocument : iframe.contentWindow.document,
+                              tables=fdoc.getElementsByClassName('main_table'); 
+
+                          if(tables.length){
+                            for(var r=1;r<tables[0].rows.length;r=r+1){
+                                var row=tables[0].rows[r];
+                                var name=row.cells[0].innerHTML;
+                                if(name===word){
+                                    row.style.display='none';
+                                }
+                            }
+                        }
+                    });
+                });
+            },
+            /*Создать кнопку, по нажатию на которую, 
+            будет найден комментарий, начинающийся с <!— js: и вывести alert с текстом, идущим после двоеточия*/
+            '7':function () {
+                main.tools.createButton('Task7', function () {
+                    var nodes=document.body.childNodes,
+                        regexp='/<!-\sjs:/i',
+                        result;
+
+                    for(var i=0;i<nodes.length;i++){
+                       if(nodes[i].nodeType==8){
+                            result=nodes[i].data.match(/<!-\sjs:.*/i);
+                            alert(result[0].replace(/<!-\sjs:/,""));
+                       }
+                    }
+                    
+                });
+            }
+    };
+
+        return {
+            init:main.util.ready(function () {
+               for(task in main.operation){
+                    main.operation[task].apply(main);
+                }
+            })
+        };
+
+    })(window);
+    </script>
+</body>
+</html>
